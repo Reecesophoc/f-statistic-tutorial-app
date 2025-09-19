@@ -31,7 +31,14 @@
         `data-type="module"` tells Babel to treat this as a module so that top‑level
         declarations don't pollute the global scope.
     -->
-    <script type="text/babel" data-type="module" data-presets="env,react" data-plugins="transform-typescript">
+    <!--
+        Use Babel to transpile our React/TypeScript code on the fly. We avoid
+        setting data-type="module" because some browsers treat module scripts
+        differently and GitHub Pages may not execute them correctly. The
+        `env`, `react`, and `typescript` presets tell Babel to handle modern
+        JavaScript, JSX, and TypeScript syntax.
+    -->
+    <script type="text/babel" data-presets="env,react,typescript">
         // Wrap the app in a try/catch so that runtime errors surface to the page instead of rendering a blank screen.
         try {
         const { useState } = React;
