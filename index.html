@@ -17,7 +17,14 @@
 <body class="bg-gray-50">
     <div id="root"></div>
     <!-- Our application code written in TSX. Babel will transpile this on the fly. -->
-        <!--
+    <!--
+        We use Babel in the browser to transpile our TSX (TypeScript + JSX) code on the fly. The
+        `type="text/babel"` attribute tells Babel to compile the script block, while the
+        `data-presets` attribute ensures that Babel applies the necessary presets for modern
+        JavaScript, React, and TypeScript. Removing `data-type="module"` prevents the script
+        from being treated as an ES module, which can cause issues when executing in the browser.
+    -->
+    <!--
         The TSX below needs Babel to transpile both JSX and TypeScript syntax.
         The `env` and `react` presets handle modern JavaScript and JSX respectively.
         The `transform-typescript` plugin strips TypeScript types. Setting
@@ -25,3 +32,731 @@
         declarations don't pollute the global scope.
     -->
     <script type="text/babel" data-type="module" data-presets="env,react" data-plugins="transform-typescript">
+        const { useState } = React;
+        // Destructure chart components from the global Recharts object
+        const {
+            BarChart,
+            Bar,
+            XAxis,
+            YAxis,
+            CartesianGrid,
+            Tooltip,
+            ResponsiveContainer
+        } = Recharts;
+
+        /**
+         * FStatisticTutorial: An interactive tutorial demonstrating how the F‑statistic works.
+         * This component adapts the original TSX file by removing module imports and using globals.
+         */
+        const FStatisticTutorial = () => {
+            const [currentStep, setCurrentStep] = useState(1);
+            const [userAnswers, setUserAnswers] = useState({});
+            const [stepCompleted, setStepCompleted] = useState({});
+
+            const totalSteps = 6;
+
+            const plantData = [
+                { treatment: 'Low CO₂', leafArea: 127.4, error: 5.2 },
+                { treatment: 'Medium CO₂', leafArea: 156.0, error: 7.6 },
+                { treatment: 'High CO₂', leafArea: 176.5, error: 6.4 }
+            ];
+
+            const handleAnswer = (questionId, answer) => {
+                setUserAnswers(prev => ({ ...prev, [questionId]: answer }));
+            };
+
+            const markStepComplete = (step) => {
+                setStepCompleted(prev => ({ ...prev, [step]: true }));
+            };
+
+            const canAdvance = (step) => {
+                return stepCompleted[step] || false;
+            };
+
+            const Step1ResearchQuestion = () => (
+                <div className="space-y-6">
+                    <div className="bg-green-100 p-6 rounded-lg border-l-4 border-green-500">
+                        <h2 className="text-2xl font-bold text-green-800 mb-4">🌱 Welcome, Researcher!</h2>
+                        <p className="text-lg text-green-700 mb-4">
+                            You're studying rocket plants (arugula) and want to know: <strong>"Does CO₂ level affect plant leaf growth?"</strong>
+                        </p>
+                        <div className="bg-white p-4 rounded border">
+                            <h3 className="font-bold mb-2">Your Experiment:</h3>
+                            <ul className="space-y-1 text-gray-700">
+                                <li>• 240 rocket plants total</li>
+                                <li>• 3 groups: Low CO₂ (400 ppm), Medium CO₂ (500 ppm), High CO₂ (600 ppm)</li>
+                                <li>• 80 plants in each group</li>
+                                <li>• Measured: Total leaf surface area after 5 weeks</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div className="bg-white p-6 rounded-lg border">
+                        <h3 className="text-xl font-bold mb-4">🤔 Your Research Question</h3>
+                        <p className="mb-4">Before we look at any numbers, what do YOU think will happen?</p>
+
+                        <div className="space-y-3">
+                            <label className="flex items-center space-x-3 cursor-pointer">
+                                <input
+                                    type="radio"
+                                    name="hypothesis"
+                                    value="same"
+                                    onChange={(e) => handleAnswer('hypothesis', e.target.value)}
+                                    className="w-4 h-4"
+                                    checked={userAnswers.hypothesis === 'same'}
+                                />
+                                <span>All groups will have similar leaf areas (CO₂ doesn't matter)</span>
+                            </label>
+                            <label className="flex items-center space-x-3 cursor-pointer">
+                                <input
+                                    type="radio"
+                                    name="hypothesis"
+                                    value="different"
+                                    onChange={(e) => handleAnswer('hypothesis', e.target.value)}
+                                    className="w-4 h-4"
+                                    checked={userAnswers.hypothesis === 'different'}
+                                />
+                                <span>Higher CO₂ groups will have larger leaf areas</span>
+                            </label>
+                            <label className="flex items-center space-x-3 cursor-pointer">
+                                <input
+                                    type="radio"
+                                    name="hypothesis"
+                                    value="lower"
+                                    onChange={(e) => handleAnswer('hypothesis', e.target.value)}
+                                    className="w-4 h-4"
+                                    checked={userAnswers.hypothesis === 'lower'}
+                                />
+                                <span>Higher CO₂ groups will have smaller leaf areas</span>
+                            </label>
+                        </div>
+
+                        {userAnswers.hypothesis && (
+                            <div className="mt-4 p-4 bg-blue-50 rounded border-l-4 border-blue-400">
+                                <p className="text-blue-800">
+                                    Great! You've made a prediction. In statistics, we call this a <strong>hypothesis</strong>.
+                                    Now let's see what the data shows us!
+                                </p>
+                                <button
+                                    onClick={() => markStepComplete(1)}
+                                    className="mt-3 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
+                                >
+                                    See the Results! →
+                                </button>
+                            </div>
+                        )}
+                    </div>
+                </div>
+            );
+
+            const Step2SeeingTheData = () => (
+                <div className="space-y-6">
+                    <div className="bg-white p-6 rounded-lg border">
+                        <h2 className="text-2xl font-bold mb-4">📊 The Results Are In!</h2>
+                        <p className="mb-4">Here's what happened to the rocket plants after 5 weeks:</p>
+
+                        <ResponsiveContainer width="100%" height={300}>
+                            <BarChart data={plantData} margin={{ top: 20, right: 30, left: 20, bottom: 60 }}>
+                                <CartesianGrid strokeDasharray="3 3" />
+                                <XAxis
+                                    dataKey="treatment"
+                                    angle={-45}
+                                    textAnchor="end"
+                                    height={80}
+                                />
+                                <YAxis label={{ value: 'Leaf Area (cm²)', angle: -90, position: 'insideLeft' }} />
+                                <Tooltip formatter={(value) => [`${value} cm²`, 'Average Leaf Area']} />
+                                <Bar dataKey="leafArea" fill="#10b981" />
+                            </BarChart>
+                        </ResponsiveContainer>
+
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
+                            {plantData.map((group, index) => (
+                                <div key={index} className="text-center p-4 bg-gray-50 rounded">
+                                    <h4 className="font-bold">{group.treatment}</h4>
+                                    <p className="text-2xl font-bold text-green-600">{group.leafArea} cm²</p>
+                                    <p className="text-sm text-gray-600">± {group.error} (error bars)</p>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+
+                    <div className="bg-white p-6 rounded-lg border">
+                        <h3 className="text-xl font-bold mb-4">🎯 Quick Check: What Do You See?</h3>
+                        <p className="mb-4">Look at the bars. What pattern do you notice?</p>
+
+                        <div className="space-y-3">
+                            <label className="flex items-center space-x-3 cursor-pointer">
+                                <input
+                                    type="radio"
+                                    name="pattern"
+                                    value="increasing"
+                                    onChange={(e) => handleAnswer('pattern', e.target.value)}
+                                    className="w-4 h-4"
+                                    checked={userAnswers.pattern === 'increasing'}
+                                />
+                                <span>Leaf area increases as CO₂ increases</span>
+                            </label>
+                            <label className="flex items-center space-x-3 cursor-pointer">
+                                <input
+                                    type="radio"
+                                    name="pattern"
+                                    value="decreasing"
+                                    onChange={(e) => handleAnswer('pattern', e.target.value)}
+                                    className="w-4 h-4"
+                                    checked={userAnswers.pattern === 'decreasing'}
+                                />
+                                <span>Leaf area decreases as CO₂ increases</span>
+                            </label>
+                            <label className="flex items-center space-x-3 cursor-pointer">
+                                <input
+                                    type="radio"
+                                    name="pattern"
+                                    value="same"
+                                    onChange={(e) => handleAnswer('pattern', e.target.value)}
+                                    className="w-4 h-4"
+                                    checked={userAnswers.pattern === 'same'}
+                                />
+                                <span>All groups look about the same</span>
+                            </label>
+                        </div>
+
+                        {userAnswers.pattern === 'increasing' && (
+                            <div className="mt-4 p-4 bg-green-50 rounded border-l-4 border-green-400">
+                                <p className="text-green-800 mb-3">
+                                    <strong>Exactly right!</strong> Higher CO₂ → Bigger leaves. But here's the important question...
+                                </p>
+                                <div className="bg-yellow-50 p-3 rounded border border-yellow-300">
+                                    <p className="text-yellow-800 font-semibold">
+                                        🤔 Could this difference just be due to random chance?
+                                    </p>
+                                    <p className="text-sm text-yellow-700 mt-1">
+                                        Maybe some plants just naturally grew bigger, and it has nothing to do with CO₂...
+                                    </p>
+                                </div>
+                                <button
+                                    onClick={() => markStepComplete(2)}
+                                    className="mt-3 px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 transition-colors"
+                                >
+                                    Let's Find Out! →
+                                </button>
+                            </div>
+                        )}
+
+                        {userAnswers.pattern === 'decreasing' && (
+                            <div className="mt-4 p-4 bg-orange-50 rounded border-l-4 border-orange-400">
+                                <p className="text-orange-800 font-semibold">Look more carefully!</p>
+                                <p className="text-orange-700 text-sm mt-1">
+                                    The Low CO₂ bar is shortest (127.4 cm²), High CO₂ bar is tallest (176.5 cm²).
+                                    This suggests leaf area <strong>increases</strong> with more CO₂, not decreases.
+                                </p>
+                            </div>
+                        )}
+
+                        {userAnswers.pattern === 'same' && (
+                            <div className="mt-4 p-4 bg-orange-50 rounded border-l-4 border-orange-400">
+                                <p className="text-orange-800 font-semibold">Take another look!</p>
+                                <p className="text-orange-700 text-sm mt-1">
+                                    There's a clear pattern: Low CO₂ (127.4) → Medium CO₂ (156.0) → High CO₂ (176.5).
+                                    The bars get progressively taller as CO₂ increases.
+                                </p>
+                            </div>
+                        )}
+                    </div>
+                </div>
+            );
+
+            const Step3VariationConcept = () => (
+                <div className="space-y-6">
+                    <div className="bg-white p-6 rounded-lg border">
+                        <h2 className="text-2xl font-bold mb-4">🎲 The Key Question: Real Effect or Just Luck?</h2>
+                        <p className="mb-4">
+                            Even if we did NOTHING different to the plants, some would naturally be bigger than others.
+                            This is called <strong>natural variation</strong>.
+                        </p>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div className="bg-red-50 p-4 rounded border-l-4 border-red-400">
+                                <h4 className="font-bold text-red-800 mb-2">Scenario A: Just Random Luck</h4>
+                                <p className="text-red-700 text-sm">
+                                    The CO₂ treatments don't actually work. We just happened to get lucky and
+                                    the bigger plants ended up in the high CO₂ group by chance.
+                                </p>
+                            </div>
+                            <div className="bg-green-50 p-4 rounded border-l-4 border-green-400">
+                                <h4 className="font-bold text-green-800 mb-2">Scenario B: Real Effect</h4>
+                                <p className="text-green-700 text-sm">
+                                    The CO₂ treatments actually cause plants to grow bigger leaves.
+                                    The difference is too big to be just coincidence.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="bg-white p-6 rounded-lg border">
+                        <h3 className="text-xl font-bold mb-4">🔍 How Can We Tell the Difference?</h3>
+                        <p className="mb-4">We need to compare TWO types of variation:</p>
+
+                        <div className="space-y-4">
+                            <div className="flex items-start space-x-4">
+                                <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center font-bold text-blue-600">1</div>
+                                <div>
+                                    <h4 className="font-bold">Variation BETWEEN groups</h4>
+                                    <p className="text-gray-600 text-sm">How different are the group averages? (127 vs 156 vs 177 cm²)</p>
+                                </div>
+                            </div>
+                            <div className="flex items-start space-x-4">
+                                <div className="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center font-bold text-purple-600">2</div>
+                                <div>
+                                    <h4 className="font-bold">Variation WITHIN groups</h4>
+                                    <p className="text-gray-600 text-sm">How much do plants vary within each treatment? (the error bars)</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="mt-6 p-4 bg-blue-50 rounded border">
+                            <h4 className="font-bold mb-2">🧠 Think About It:</h4>
+                            <p className="mb-3">If the CO₂ really works, what should we expect?</p>
+
+                            <div className="space-y-3">
+                                <label className="flex items-center space-x-3 cursor-pointer">
+                                    <input
+                                        type="radio"
+                                        name="expectation"
+                                        value="between_bigger"
+                                        onChange={(e) => handleAnswer('expectation', e.target.value)}
+                                        className="w-4 h-4"
+                                        checked={userAnswers.expectation === 'between_bigger'}
+                                    />
+                                    <span>Differences BETWEEN groups should be much bigger than variation WITHIN groups</span>
+                                </label>
+                                <label className="flex items-center space-x-3 cursor-pointer">
+                                    <input
+                                        type="radio"
+                                        name="expectation"
+                                        value="within_bigger"
+                                        onChange={(e) => handleAnswer('expectation', e.target.value)}
+                                        className="w-4 h-4"
+                                        checked={userAnswers.expectation === 'within_bigger'}
+                                    />
+                                    <span>Variation WITHIN groups should be bigger than differences BETWEEN groups</span>
+                                </label>
+                            </div>
+
+                            {userAnswers.expectation === 'between_bigger' && (
+                                <div className="mt-4 p-3 bg-green-100 rounded">
+                                    <p className="text-green-800 font-semibold">🎉 Perfect! You got it!</p>
+                                    <p className="text-green-700 text-sm mt-1">
+                                        If CO₂ really works, the treatment differences should be much bigger than the natural plant-to-plant variation.
+                                    </p>
+                                    <button
+                                        onClick={() => markStepComplete(3)}
+                                        className="mt-3 px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 transition-colors"
+                                    >
+                                        Now Let's Calculate This! →
+                                    </button>
+                                </div>
+                            )}
+
+                            {userAnswers.expectation === 'within_bigger' && (
+                                <div className="mt-4 p-3 bg-orange-50 rounded border-l-4 border-orange-400">
+                                    <p className="text-orange-800 font-semibold">Not quite!</p>
+                                    <p className="text-orange-700 text-sm mt-1">
+                                        Think about it: if CO₂ really makes plants grow bigger, then the differences between our CO₂ groups should be
+                                        much larger than the natural differences between individual plants within each group.
+                                    </p>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                </div>
+            );
+
+            const Step4FRatioConcept = () => (
+                <div className="space-y-6">
+                    <div className="bg-white p-6 rounded-lg border">
+                        <h2 className="text-2xl font-bold mb-4">⚖️ The F‑Statistic: Your Decision Tool</h2>
+                        <p className="mb-4">
+                            The F‑statistic is simply a ratio that compares these two types of variation:
+                        </p>
+
+                        <div className="bg-gray-50 p-6 rounded-lg border-2 border-dashed border-gray-300">
+                            <div className="text-center">
+                                <div className="text-3xl font-bold text-blue-600 mb-2">F = </div>
+                                <div className="text-lg">
+                                    <div className="bg-blue-100 inline-block px-4 py-2 rounded mb-2">Variation Between Groups</div>
+                                    <div className="text-2xl">÷</div>
+                                    <div className="bg-purple-100 inline-block px-4 py-2 rounded mt-2">Variation Within Groups</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+                            <div className="bg-green-50 p-4 rounded border-l-4 border-green-400">
+                                <h4 className="font-bold text-green-800">If F is BIG (like 5, 10, 20…)</h4>
+                                <p className="text-green-700 text-sm">
+                                    Between‑group differences are much larger than within‑group variation.
+                                    <strong>The treatment probably works!</strong>
+                                </p>
+                            </div>
+                            <div className="bg-red-50 p-4 rounded border-l-4 border-red-400">
+                                <h4 className="font-bold text-red-800">If F is SMALL (like 1, 2…)</h4>
+                                <p className="text-red-700 text-sm">
+                                    Between‑group differences aren't much bigger than natural variation.
+                                    <strong>Probably just random chance.</strong>
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="bg-white p-6 rounded-lg border">
+                        <h3 className="text-xl font-bold mb-4">🔢 For Our Rocket Plant Study</h3>
+                        <p className="mb-4">The researchers calculated: <span className="text-2xl font-bold text-blue-600">F = 14.59</span></p>
+
+                        <div className="space-y-3">
+                            <p>What does an F‑value of 14.59 suggest to you?</p>
+                            <label className="flex items-center space-x-3 cursor-pointer">
+                                <input
+                                    type="radio"
+                                    name="f_meaning"
+                                    value="big_effect"
+                                    onChange={(e) => handleAnswer('f_meaning', e.target.value)}
+                                    className="w-4 h-4"
+                                    checked={userAnswers.f_meaning === 'big_effect'}
+                                />
+                                <span>The between‑group differences are much bigger than within‑group variation (real effect)</span>
+                            </label>
+                            <label className="flex items-center space-x-3 cursor-pointer">
+                                <input
+                                    type="radio"
+                                    name="f_meaning"
+                                    value="small_effect"
+                                    onChange={(e) => handleAnswer('f_meaning', e.target.value)}
+                                    className="w-4 h-4"
+                                    checked={userAnswers.f_meaning === 'small_effect'}
+                                />
+                                <span>The differences could easily be due to random chance</span>
+                            </label>
+                        </div>
+
+                        {userAnswers.f_meaning === 'big_effect' && (
+                            <div className="mt-4 p-4 bg-green-50 rounded border-l-4 border-green-400">
+                                <p className="text-green-800">
+                                    <strong>Exactly!</strong> An F of 14.59 is quite large, suggesting the CO₂ treatment
+                                    creates differences much bigger than natural plant variation.
+                                </p>
+                                <p className="text-green-700 text-sm mt-2">
+                                    But we still need to know: "How big is big enough to be confident?"
+                                </p>
+                                <button
+                                    onClick={() => markStepComplete(4)}
+                                    className="mt-3 px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 transition-colors"
+                                >
+                                    Learn the Decision Rule! →
+                                </button>
+                            </div>
+                        )}
+
+                        {userAnswers.f_meaning === 'small_effect' && (
+                            <div className="mt-4 p-4 bg-orange-50 rounded border-l-4 border-orange-400">
+                                <p className="text-orange-800 font-semibold">Think again!</p>
+                                <p className="text-orange-700 text-sm mt-1">
+                                    An F‑value of 14.59 is actually quite large! Values around 1–3 would suggest random chance, but 14.59 means the treatment differences are nearly 15 times bigger than natural variation. That's huge!
+                                </p>
+                            </div>
+                        )}
+                    </div>
+                </div>
+            );
+
+            const Step5CriticalValue = () => (
+                <div className="space-y-6">
+                    <div className="bg-white p-6 rounded-lg border">
+                        <h2 className="text-2xl font-bold mb-4">🎯 Setting the Decision Threshold</h2>
+                        <p className="mb-4">
+                            Scientists use a <strong>critical F‑value</strong> as a cutoff point. If your calculated F is higher than this critical value, you can confidently say the treatment works.
+                        </p>
+
+                        <div className="bg-blue-50 p-4 rounded border">
+                            <h4 className="font-bold mb-2">Our Study Details:</h4>
+                            <div className="grid grid-cols-2 gap-4 text-sm">
+                                <div><strong>Groups:</strong> 3 (Low, Medium, High CO₂)</div>
+                                <div><strong>df₁:</strong> 3 − 1 = 2</div>
+                                <div><strong>Total plants:</strong> 240</div>
+                                <div><strong>df₂:</strong> 240 − 3 = 237</div>
+                            </div>
+                            <p className="text-xs text-gray-600 mt-2">df = degrees of freedom (relates to your sample size)</p>
+                        </div>
+                    </div>
+
+                    <div className="bg-white p-6 rounded-lg border">
+                        <h3 className="text-xl font-bold mb-4">📋 Finding the Critical Value in F‑Tables</h3>
+                        <p className="mb-4">Scientists use F‑distribution tables to find critical values. Here's a simplified version:</p>
+
+                        <div className="overflow-x-auto mb-4">
+                            <table className="min-w-full border-collapse border border-gray-300 text-xs">
+                                <thead className="bg-gray-100">
+                                    <tr>
+                                        <th className="border border-gray-300 p-2">df₂ \ df₁</th>
+                                        <th className="border border-gray-300 p-2 bg-yellow-100">1</th>
+                                        <th className="border border-gray-300 p-2 bg-yellow-100">2</th>
+                                        <th className="border border-gray-300 p-2">3</th>
+                                        <th className="border border-gray-300 p-2">4</th>
+                                        <th className="border border-gray-300 p-2">5</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td className="border border-gray-300 p-2 font-semibold">10</td>
+                                        <td className="border border-gray-300 p-2">4.96</td>
+                                        <td className="border border-gray-300 p-2">4.10</td>
+                                        <td className="border border-gray-300 p-2">3.71</td>
+                                        <td className="border border-gray-300 p-2">3.48</td>
+                                        <td className="border border-gray-300 p-2">3.33</td>
+                                    </tr>
+                                    <tr>
+                                        <td className="border border-gray-300 p-2 font-semibold">20</td>
+                                        <td className="border border-gray-300 p-2">4.35</td>
+                                        <td className="border border-gray-300 p-2">3.49</td>
+                                        <td className="border border-gray-300 p-2">3.10</td>
+                                        <td className="border border-gray-300 p-2">2.87</td>
+                                        <td className="border border-gray-300 p-2">2.71</td>
+                                    </tr>
+                                    <tr>
+                                        <td className="border border-gray-300 p-2 font-semibold">120</td>
+                                        <td className="border border-gray-300 p-2">3.92</td>
+                                        <td className="border border-gray-300 p-2">3.07</td>
+                                        <td className="border border-gray-300 p-2">2.68</td>
+                                        <td className="border border-gray-300 p-2">2.45</td>
+                                        <td className="border border-gray-300 p-2">2.29</td>
+                                    </tr>
+                                    <tr className="bg-yellow-100">
+                                        <td className="border border-gray-300 p-2 font-semibold">∞ (very large)</td>
+                                        <td className="border border-gray-300 p-2">3.84</td>
+                                        <td className="border border-gray-300 p-2 bg-red-100 font-bold">3.00</td>
+                                        <td className="border border-gray-300 p-2">2.60</td>
+                                        <td className="border border-gray-300 p-2">2.37</td>
+                                        <td className="border border-gray-300 p-2">2.21</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <div className="bg-yellow-50 p-4 rounded border border-yellow-300 mb-4">
+                            <h4 className="font-bold mb-2">🔍 How to Read the Table:</h4>
+                            <div className="text-sm space-y-1">
+                                <p>• <strong>df₁ = 2</strong> (columns) → Look at column 2</p>
+                                <p>• <strong>df₂ = 237</strong> (rows) → Since 237 is very large, use the "∞" row</p>
+                                <p>• <strong>Critical F ≈ 3.00</strong> (where row and column meet)</p>
+                            </div>
+                            <p className="text-xs text-gray-600 mt-2">*For α = 0.05 significance level</p>
+                        </div>
+
+                        <div className="space-y-3">
+                            <p>Now you know where critical values come from! What does this mean for our study?</p>
+                            <label className="flex items-center space-x-3 cursor-pointer">
+                                <input
+                                    type="radio"
+                                    name="table_understanding"
+                                    value="correct"
+                                    onChange={(e) => handleAnswer('table_understanding', e.target.value)}
+                                    className="w-4 h-4"
+                                    checked={userAnswers.table_understanding === 'correct'}
+                                />
+                                <span>We look up df₁ = 2, df₂ = 237 in the table to find our cutoff value</span>
+                            </label>
+                            <label className="flex items-center space-x-3 cursor-pointer">
+                                <input
+                                    type="radio"
+                                    name="table_understanding"
+                                    value="wrong"
+                                    onChange={(e) => handleAnswer('table_understanding', e.target.value)}
+                                    className="w-4 h-4"
+                                    checked={userAnswers.table_understanding === 'wrong'}
+                                />
+                                <span>The critical value is always 3.00 for any study</span>
+                            </label>
+                        </div>
+
+                        {userAnswers.table_understanding === 'correct' && (
+                            <div className="mt-4 p-4 bg-green-50 rounded border-l-4 border-green-400">
+                                <p className="text-green-800 font-semibold">✓ Perfect understanding!</p>
+                                <p className="text-green-700 text-sm mt-1">
+                                    Every study has different degrees of freedom, so we always need to look up the specific critical value for our experiment.
+                                </p>
+                            </div>
+                        )}
+
+                        {userAnswers.table_understanding === 'wrong' && (
+                            <div className="mt-4 p-4 bg-orange-50 rounded border-l-4 border-orange-400">
+                                <p className="text-orange-800 font-semibold">Not quite!</p>
+                                <p className="text-orange-700 text-sm mt-1">
+                                    Critical values change depending on your sample size and number of groups. That's why we need to look them up in tables using our specific degrees of freedom.
+                                </p>
+                            </div>
+                        )}
+                    </div>
+
+                    <div className="bg-white p-6 rounded-lg border">
+                        <h3 className="text-xl font-bold mb-4">📊 The Final Decision</h3>
+                        <p className="mb-4">For df₁ = 2, df₂ = 237, the critical F‑value is approximately <strong>3.04</strong></p>
+
+                        <div className="bg-gray-50 p-6 rounded-lg">
+                            <h4 className="font-bold mb-4 text-center">Decision Time!</h4>
+                            <div className="flex justify-center items-center space-x-8">
+                                <div className="text-center">
+                                    <div className="text-sm text-gray-600">Our Calculated F</div>
+                                    <div className="text-4xl font-bold text-blue-600">14.59</div>
+                                </div>
+                                <div className="text-3xl">vs</div>
+                                <div className="text-center">
+                                    <div className="text-sm text-gray-600">Critical F</div>
+                                    <div className="text-4xl font-bold text-red-600">3.04</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="mt-6">
+                            <p className="mb-3">Since 14.59 > 3.04, what can we conclude?</p>
+                            <div className="space-y-3">
+                                <label className="flex items-center space-x-3 cursor-pointer">
+                                    <input
+                                        type="radio"
+                                        name="conclusion"
+                                        value="significant"
+                                        onChange={(e) => handleAnswer('conclusion', e.target.value)}
+                                        className="w-4 h-4"
+                                        checked={userAnswers.conclusion === 'significant'}
+                                    />
+                                    <span>The CO₂ treatments have a statistically significant effect (p < 0.05)</span>
+                                </label>
+                                <label className="flex items-center space-x-3 cursor-pointer">
+                                    <input
+                                        type="radio"
+                                        name="conclusion"
+                                        value="not_significant"
+                                        onChange={(e) => handleAnswer('conclusion', e.target.value)}
+                                        className="w-4 h-4"
+                                        checked={userAnswers.conclusion === 'not_significant'}
+                                    />
+                                    <span>The differences could still be due to random chance (p > 0.05)</span>
+                                </label>
+                            </div>
+
+                            {userAnswers.conclusion === 'significant' && (
+                                <div className="mt-4 p-4 bg-green-50 rounded border-l-4 border-green-400">
+                                    <p className="text-green-800 font-semibold">🎉 Perfect!</p>
+                                    <p className="text-green-700 text-sm mt-1">
+                                        Since our F (14.59) is much larger than the critical value (3.04), we can confidently say
+                                        the CO₂ treatments have a real effect on leaf growth. The p‑value is < 0.05, meaning
+                                        there's less than a 5 % chance this result happened by random luck alone.
+                                    </p>
+                                    <button
+                                        onClick={() => markStepComplete(5)}
+                                        className="mt-3 px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 transition-colors"
+                                    >
+                                        Try It Yourself! →
+                                    </button>
+                                </div>
+                            )}
+
+                            {userAnswers.conclusion === 'not_significant' && (
+                                <div className="mt-4 p-4 bg-orange-50 rounded border-l-4 border-orange-400">
+                                    <p className="text-orange-800 font-semibold">Think again!</p>
+                                    <p className="text-orange-700 text-sm mt-1">
+                                        Our F‑value (14.59) is nearly 5 times larger than the critical value (3.04)! This means our results are
+                                        WAY beyond what we'd expect from random chance. This is definitely significant.
+                                    </p>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                </div>
+            );
+
+            // Determine which component to render based on the current step
+            const getCurrentStepComponent = () => {
+                if (currentStep === 1) return <Step1ResearchQuestion />;
+                if (currentStep === 2) return <Step2SeeingTheData />;
+                if (currentStep === 3) return <Step3VariationConcept />;
+                if (currentStep === 4) return <Step4FRatioConcept />;
+                if (currentStep === 5) return <Step5CriticalValue />;
+                return <div className="p-6 text-center">Congratulations you have finished the tutorial!</div>;
+            };
+
+            return (
+                <div className="max-w-4xl mx-auto p-6 bg-gray-50 min-h-screen">
+                    <header className="text-center mb-8">
+                        <h1 className="text-3xl font-bold text-gray-800 mb-2">F‑Statistic Tutorial</h1>
+                        <p className="text-gray-600 mb-4">Learn statistics through real rocket plant research!</p>
+
+                        <div className="bg-white rounded-full p-1 max-w-md mx-auto">
+                            <div className="flex justify-between text-xs text-gray-500 mb-2">
+                                <span>Step {currentStep} of {totalSteps}</span>
+                                <span>{Math.round((currentStep / totalSteps) * 100)}% Complete</span>
+                            </div>
+                            <div className="bg-gray-200 rounded-full h-2">
+                                <div
+                                    className="bg-blue-600 h-2 rounded-full transition-all duration-300"
+                                    style={{ width: `${(currentStep / totalSteps) * 100}%` }}
+                                />
+                            </div>
+                        </div>
+                    </header>
+
+                    <main className="mb-8">
+                        {getCurrentStepComponent()}
+                    </main>
+
+                    <div className="flex justify-between items-center">
+                        <button
+                            onClick={() => setCurrentStep(Math.max(1, currentStep - 1))}
+                            disabled={currentStep === 1}
+                            className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+                                currentStep === 1
+                                    ? 'bg-gray-200 text-gray-500 cursor-not-allowed'
+                                    : 'bg-gray-600 text-white hover:bg-gray-700'
+                            }`}
+                        >
+                            ← Previous
+                        </button>
+
+                        <div className="text-center">
+                            <p className="text-sm text-gray-600">Step {currentStep}</p>
+                        </div>
+
+                        <button
+                            onClick={() => {
+                                if (canAdvance(currentStep) && currentStep < totalSteps) {
+                                    setCurrentStep(currentStep + 1);
+                                }
+                            }}
+                            disabled={!canAdvance(currentStep) || currentStep === totalSteps}
+                            className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+                                !canAdvance(currentStep) || currentStep === totalSteps
+                                    ? 'bg-gray-200 text-gray-500 cursor-not-allowed'
+                                    : 'bg-blue-600 text-white hover:bg-blue-700'
+                            }`}
+                        >
+                            Next →
+                        </button>
+                    </div>
+
+                    {!canAdvance(currentStep) && currentStep < totalSteps && (
+                        <div className="mt-4 text-center">
+                            <p className="text-sm text-gray-600">
+                                💡 Complete the activities above to unlock the next step!
+                            </p>
+                        </div>
+                    )}
+                </div>
+            );
+        };
+
+        // Mount the React application to the page
+        const rootElement = document.getElementById('root');
+        const root = ReactDOM.createRoot(rootElement);
+        root.render(<FStatisticTutorial />);
+    </script>
+</body>
+</html>
