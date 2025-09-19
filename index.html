@@ -32,6 +32,8 @@
         declarations don't pollute the global scope.
     -->
     <script type="text/babel" data-type="module" data-presets="env,react" data-plugins="transform-typescript">
+        // Wrap the app in a try/catch so that runtime errors surface to the page instead of rendering a blank screen.
+        try {
         const { useState } = React;
         // Destructure chart components from the global Recharts object
         const {
@@ -757,6 +759,12 @@
         const rootElement = document.getElementById('root');
         const root = ReactDOM.createRoot(rootElement);
         root.render(<FStatisticTutorial />);
+        } catch (err) {
+          // If an error occurs during rendering, display it in the DOM so it's visible on the GitHub Pages site
+          const rootEl = document.getElementById('root') || document.body;
+          rootEl.innerHTML = `<pre style="color:red; white-space:pre-wrap; word-break:break-word;">${err && err.message ? err.message : err}</pre>`;
+          console.error(err);
+        }
     </script>
 </body>
 </html>
