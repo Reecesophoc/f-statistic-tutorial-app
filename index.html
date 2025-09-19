@@ -16,6 +16,19 @@
 </head>
 <body class="bg-gray-50">
     <div id="root"></div>
+    <!-- Global error handler: if any uncaught error occurs, display it in the page -->
+    <script>
+      window.onerror = function(message, source, line, column, error) {
+        const root = document.getElementById('root');
+        if (root) {
+          root.innerHTML =
+            '<div style="color: red; padding: 1rem; background: #fee; border: 1px solid #fcc;">' +
+            '<h2>Uncaught Error</h2>' +
+            '<pre>' + String(message) + '\n' + source + ':' + line + ':' + column + '</pre>' +
+            '</div>';
+        }
+      };
+    </script>
     <!-- Our application code written in TSX. Babel will transpile this on the fly. -->
     <!--
         We use Babel in the browser to transpile our TSX (TypeScript + JSX) code on the fly. The
@@ -38,7 +51,7 @@
         `env`, `react`, and `typescript` presets tell Babel to handle modern
         JavaScript, JSX, and TypeScript syntax.
     -->
-    <script type="text/babel" data-presets="env,react,typescript">
+    <script type="text/babel" data-presets="env,react" data-plugins="transform-typescript">
         // Wrap the app in a try/catch so that runtime errors surface to the page instead of rendering a blank screen.
         try {
         const { useState } = React;
